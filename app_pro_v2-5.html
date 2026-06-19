@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>POCKET IA - V14 Données Réelles</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;700&display=swap');
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #030712; color: #f8fafc; font-family: 'Rajdhani', sans-serif; padding: 10px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+
+        .app-container { max-width: 440px; width: 100%; background: linear-gradient(145deg, #0f172a, #020617); padding: 25px 20px; border-radius: 24px; box-shadow: 0 0 40px rgba(0, 255, 204, 0.05); border: 1px solid #1e293b; position: relative; overflow: hidden; }
+        .app-container::before { content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 60%; height: 2px; background: linear-gradient(90deg, transparent, #00ffcc, transparent); }
+
+        .header { text-align: center; margin-bottom: 15px; }
+        h1 { font-family: 'Orbitron', sans-serif; color: #facc15; font-size: 26px; font-weight: 900; letter-spacing: 2px; text-shadow: 0 0 20px rgba(250, 204, 21, 0.3); }
+        .version { font-size: 10px; color: #00ffcc; letter-spacing: 5px; text-transform: uppercase; margin-top: 5px; font-weight: bold; }
+
+        .disclaimer { background: #1c1917; border: 1px solid #57534e; border-radius: 10px; padding: 10px 12px; font-size: 11px; color: #a8a29e; line-height: 1.5; margin-bottom: 15px; }
+        .disclaimer b { color: #fbbf24; }
+
+        .connection-bar { display: flex; justify-content: space-between; align-items: center; background: #020617; padding: 10px 15px; border-radius: 12px; border: 1px solid #1e293b; margin-bottom: 15px; font-size: 12px; }
+        .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; background: #ef4444; box-shadow: 0 0 10px #ef4444; transition: 0.3s; }
+        .dot.active { background: #10b981; box-shadow: 0 0 10px #10b981; }
+        .dot.closed { background: #6b7280; box-shadow: 0 0 10px #6b7280; }
+        #conn-text { font-weight: 700; color: #94a3b8; }
+        #source-text { font-family: monospace; color: #64748b; font-size: 10px; }
+
+        .control-panel { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; }
+        input, select { flex: 1 1 auto; min-width: 90px; background: #0f172a; border: 2px solid #334155; padding: 15px; border-radius: 14px; color: #fff; font-family: 'Orbitron', sans-serif; font-size: 16px; text-align: center; text-transform: uppercase; transition: 0.3s; }
+        input:focus, select:focus { border-color: #facc15; outline: none; box-shadow: 0 0 15px rgba(250, 204, 21, 0.2); }
+        select { flex: 0 1 110px; font-size: 12px; cursor: pointer; }
+        button { flex: 1 1 100%; order: 3; background: #facc15; color: #000; border: none; padding: 16px 25px; border-radius: 14px; font-family: 'Orbitron', sans-serif; font-weight: 900; font-size: 15px; cursor: pointer; transition: 0.3s; white-space: nowrap; }
+        button.stop { background: #ef4444; color: #fff; box-shadow: 0 0 15px rgba(239, 68, 68, 0.4); }
+
+        .market-closed-banner { display: none; background: rgba(107, 114, 128, 0.15); border: 1px solid #6b7280; border-radius: 12px; padding: 12px; text-align: center; font-size: 12px; color: #d1d5db; margin-bottom: 15px; font-weight: 600; }
+
+        .main-display { background: #000; padding: 30px 15px; border-radius: 20px; text-align: center; margin-bottom: 20px; border: 1px solid #1e293b; position: relative; }
+        .price-title { font-size: 10px; color: #64748b; letter-spacing: 3px; font-weight: 700; margin-bottom: 10px; text-transform: uppercase; }
+        .price { font-family: 'Orbitron', sans-serif; font-size: 42px; font-weight: 900; color: #fff; transition: color 0.1s ease; text-shadow: 0 0 20px rgba(255,255,255,0.1); }
+        .price.up { color: #10b981; text-shadow: 0 0 20px rgba(16, 185, 129, 0.4); }
+        .price.down { color: #ef4444; text-shadow: 0 0 20px rgba(239, 68, 68, 0.4); }
+        .price.stale { color: #6b7280; }
+
+        .grid-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+        .stat-card { background: #0f172a; padding: 15px; border-radius: 14px; text-align: center; border: 1px solid #1e293b; }
+        .stat-title { font-size: 10px; color: #64748b; font-weight: 700; letter-spacing: 1px; margin-bottom: 5px; }
+        .stat-value { font-family: 'Orbitron', sans-serif; font-size: 20px; font-weight: 700; color: #00ffcc; }
+
+        .reliability-card { background: #0f172a; padding: 12px 15px; border-radius: 14px; border: 1px solid #1e293b; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+        .reliability-card .stat-title { margin-bottom: 2px; }
+        .reliability-value { font-family: 'Orbitron', sans-serif; font-size: 22px; font-weight: 900; }
+        .reliability-value.good { color: #10b981; }
+        .reliability-value.bad { color: #ef4444; }
+        .reliability-value.neutral { color: #94a3b8; }
+        .reliability-sub { font-size: 10px; color: #64748b; text-align: right; }
+
+        .signal-box { display: none; padding: 25px; border-radius: 16px; text-align: center; margin-bottom: 20px; border: 2px solid transparent; animation: pulse 1.5s infinite; }
+        .signal-box.CALL { display: block; background: rgba(16, 185, 129, 0.1); border-color: #10b981; }
+        .signal-box.PUT { display: block; background: rgba(239, 68, 68, 0.1); border-color: #ef4444; }
+        .signal-action { font-family: 'Orbitron', sans-serif; font-size: 32px; font-weight: 900; letter-spacing: 2px; margin-bottom: 5px; }
+        .signal-box.CALL .signal-action { color: #10b981; text-shadow: 0 0 15px rgba(16, 185, 129, 0.5); }
+        .signal-box.PUT .signal-action { color: #ef4444; text-shadow: 0 0 15px rgba(239, 68, 68, 0.5); }
+        .signal-info { font-size: 14px; color: #cbd5e1; font-weight: 600; line-height: 1.6; }
+        .highlight { color: #facc15; font-family: 'Orbitron', sans-serif; background: #000; padding: 2px 8px; border-radius: 6px; }
+
+        .terminal { background: #020617; height: 150px; border-radius: 12px; padding: 15px; font-family: monospace; font-size: 11px; overflow-y: auto; color: #94a3b8; border: 1px solid #1e293b; }
+        .terminal span { display: block; margin-bottom: 4px; }
+        .log-sys { color: #3b82f6; }
+        .log-warn { color: #f59e0b; }
+        .log-success { color: #10b981; }
+        .log-error { color: #ef4444; }
+
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(0,0,0,0.7); } 70% { box-shadow: 0 0 0 15px rgba(0,0,0,0); } 100% { box-shadow: 0 0 0 0 rgba(0,0,0,0); } }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <div class="header">
+        <h1>POCKET IA</h1>
+        <div class="version">V14 — Données de marché réelles</div>
+    </div>
+
+    <div class="disclaimer">
+        <b>À savoir :</b> ce signal vient d'un RSI + tendance sur données réelles (Kraken / Twelve Data). Ce n'est pas une garantie de gain. Sur des options à expiration courte, le bruit de marché domine largement ce type d'indicateur — utilise le taux de réussite réel affiché ci-dessous pour juger par toi-même.
+    </div>
+
+    <div class="connection-bar">
+        <div><span id="dot" class="dot"></span><span id="conn-text">HORS LIGNE</span></div>
+        <div id="source-text">--</div>
+    </div>
+
+    <div class="control-panel">
+        <select id="asset-type">
+            <option value="crypto">Crypto</option>
+            <option value="forex">Forex</option>
+        </select>
+        <input type="text" id="market-input" value="BTCUSD" placeholder="BTCUSD, EURUSD...">
+        <button id="main-btn" onclick="toggleEngine()">LANCER</button>
+    </div>
+
+    <div class="market-closed-banner" id="closed-banner">
+        Marché fermé ou actif non disponible via une source réelle. Aucun prix simulé ne sera affiché.
+    </div>
+
+    <div class="main-display">
+        <div class="price-title" id="price-title-text">Flux de Cotation Réel</div>
+        <div id="live-price" class="price">--</div>
+    </div>
+
+    <div class="grid-stats">
+        <div class="stat-card">
+            <div class="stat-title">RSI (14)</div>
+            <div id="rsi-display" class="stat-value">--</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-title">TENDANCE</div>
+            <div id="trend-display" class="stat-value">--</div>
+        </div>
+    </div>
+
+    <div class="reliability-card">
+        <div>
+            <div class="stat-title">FIABILITÉ RÉELLE (session)</div>
+            <div id="reliability-value" class="reliability-value neutral">-- %</div>
+        </div>
+        <div class="reliability-sub" id="reliability-sub">0 signal évalué</div>
+    </div>
+
+    <div id="signal-container" class="signal-box">
+        <div class="signal-action" id="signal-type">ACHETER</div>
+        <div class="signal-info" id="signal-desc">...</div>
+    </div>
+
+    <div class="terminal" id="terminal-logs">
+        <span class="log-sys">[SYS] Moteur V14 prêt. Sources réelles uniquement.</span>
+    </div>
+</div>
+
+<script>
+    // Clé Twelve Data : tier gratuit, 8 req/min, 800 req/jour.
+    // Remplace par ta propre clé sur twelvedata.com (gratuit) pour usage perso.
+    const TWELVE_DATA_KEY = "demo"; // "demo" fonctionne en lecture limitée pour tester
+
+    // Durée d'expiration sur laquelle le signal est calculé ET évalué (en secondes).
+    // Une seule source de vérité : change ici, l'affichage et le calcul de fiabilité suivent automatiquement.
+    const EXPIRATION_SECONDS = 60;
+
+    const state = {
+        running: false,
+        socket: null,
+        pollInterval: null,
+        evaluatorInterval: null,
+        history: [],
+        lastPrice: 0,
+        signalActive: false,
+        timeoutCheck: null,
+        assetType: "crypto",
+        currentAsset: "",
+        pendingSignals: [], // { price, type, time, evaluated }
+        wins: 0,
+        losses: 0
+    };
+
+    function log(msg, type = "sys") {
+        const term = document.getElementById('terminal-logs');
+        const colorClass = type === "sys" ? "log-sys" : type === "warn" ? "log-warn" : type === "error" ? "log-error" : "log-success";
+        if (term.children.length > 60) term.removeChild(term.lastChild);
+        term.innerHTML = `<span class="${colorClass}">[${new Date().toLocaleTimeString()}] ${msg}</span>` + term.innerHTML;
+    }
+
+    // ---------- Formatage des symboles ----------
+    function formatCryptoSymbol(asset) {
+        // Kraken utilise le format "BASE/QUOTE", ex: "BTC/USD", "ETH/USD"
+        let clean = asset.replace(/[^a-zA-Z]/g, "").toUpperCase();
+        // Retire un suffixe USD/USDT déjà présent pour le ré-ajouter proprement
+        clean = clean.replace(/(USDT|USD)$/, "");
+        if (!clean) return null;
+        return clean + "/USD";
+    }
+
+    function formatForexSymbol(asset) {
+        // Twelve Data attend un format "EUR/USD"
+        let clean = asset.replace(/[^a-zA-Z]/g, "").toUpperCase();
+        if (clean.length === 6) {
+            return clean.slice(0, 3) + "/" + clean.slice(3);
+        }
+        return null; // format non reconnu, pas de fallback inventé
+    }
+
+    // ---------- RSI correct (méthode de Wilder, lissée) ----------
+    function calculateRSI(data, period = 14) {
+        if (data.length < period + 1) return null;
+
+        let gains = [];
+        let losses = [];
+        for (let i = 1; i < data.length; i++) {
+            let diff = data[i] - data[i - 1];
+            gains.push(diff > 0 ? diff : 0);
+            losses.push(diff < 0 ? -diff : 0);
+        }
+
+        // Moyenne initiale simple sur la première période
+        let avgGain = gains.slice(0, period).reduce((a, b) => a + b, 0) / period;
+        let avgLoss = losses.slice(0, period).reduce((a, b) => a + b, 0) / period;
+
+        // Lissage de Wilder pour le reste de la série
+        for (let i = period; i < gains.length; i++) {
+            avgGain = (avgGain * (period - 1) + gains[i]) / period;
+            avgLoss = (avgLoss * (period - 1) + losses[i]) / period;
+        }
+
+        if (avgGain === 0 && avgLoss === 0) return 50;
+        if (avgLoss === 0) return 100;
+        let rs = avgGain / avgLoss;
+        return 100 - (100 / (1 + rs));
+    }
+
+    // ---------- Tracking de fiabilité réelle ----------
+    function registerSignalForTracking(price, type) {
+        state.pendingSignals.push({ price, type, time: Date.now(), evaluated: false });
+        log(`[DIAG] Signal enregistré pour suivi. File d'attente : ${state.pendingSignals.length} signal(aux).`, "sys");
+    }
+
+    function evaluatePendingSignals(currentPrice) {
+        const now = Date.now();
+        state.pendingSignals.forEach(sig => {
+            if (sig.evaluated) return;
+            if (now - sig.time >= EXPIRATION_SECONDS * 1000) { // calé sur l'expiration affichée à l'utilisateur
+                sig.evaluated = true;
+                const wentUp = currentPrice > sig.price;
+                const correct = (sig.type === "CALL" && wentUp) || (sig.type === "PUT" && !wentUp);
+                if (correct) state.wins++; else state.losses++;
+                log(`Évaluation signal ${sig.type} @ ${sig.price.toFixed(5)} → ${correct ? "GAGNANT" : "PERDANT"}`, correct ? "success" : "error");
+                updateReliabilityDisplay();
+            }
+        });
+        state.pendingSignals = state.pendingSignals.filter(s => !s.evaluated || (now - s.time) < EXPIRATION_SECONDS * 2000);
+    }
+
+    function updateReliabilityDisplay() {
+        const total = state.wins + state.losses;
+        const el = document.getElementById('reliability-value');
+        const sub = document.getElementById('reliability-sub');
+        if (total === 0) {
+            el.textContent = "-- %";
+            el.className = "reliability-value neutral";
+            sub.textContent = "0 signal évalué";
+            return;
+        }
+        const rate = (state.wins / total) * 100;
+        el.textContent = rate.toFixed(0) + " %";
+        el.className = "reliability-value " + (rate >= 55 ? "good" : "bad");
+        sub.textContent = `${state.wins}V / ${state.losses}D sur ${total} signaux (cette session)`;
+    }
+
+    // ---------- Traitement d'un tick de prix réel ----------
+    function processTick(price) {
+        if (!price || isNaN(price)) return;
+
+        const display = document.getElementById('live-price');
+        display.classList.remove('stale');
+        let decimals = price < 10 ? 5 : 2;
+
+        if (price > state.lastPrice && state.lastPrice !== 0) display.className = "price up";
+        else if (price < state.lastPrice && state.lastPrice !== 0) display.className = "price down";
+
+        display.innerText = price.toFixed(decimals);
+
+        state.history.push(price);
+        if (state.history.length > 60) state.history.shift();
+
+        evaluatePendingSignals(price);
+
+        let rsi = calculateRSI(state.history);
+        document.getElementById('rsi-display').innerText = rsi !== null ? rsi.toFixed(1) : "...";
+
+        let trend = "NEUTRE";
+        let trendScore = 0;
+        if (state.history.length > 5) {
+            let change = price - state.history[state.history.length - 5];
+            if (change > 0) { trend = "HAUSSIÈRE"; trendScore = 1; }
+            else if (change < 0) { trend = "BAISSIÈRE"; trendScore = -1; }
+        }
+        document.getElementById('trend-display').innerText = trend;
+
+        let signal = null;
+        if (rsi !== null) {
+            if (rsi > 55 && trendScore === 1) signal = "CALL";
+            else if (rsi < 45 && trendScore === -1) signal = "PUT";
+        }
+
+        const sigBox = document.getElementById('signal-container');
+        if (signal && !state.signalActive) {
+            state.signalActive = true;
+            sigBox.className = `signal-box ${signal}`;
+            let actionText = signal === "CALL" ? "ACHETER (HAUT)" : "VENDRE (BAS)";
+
+            document.getElementById('signal-type').innerText = actionText;
+            document.getElementById('signal-desc').innerHTML = `Prix actuel : <span class="highlight">${price.toFixed(decimals)}</span><br>Bougie / expiration utilisée : <b>${EXPIRATION_SECONDS} SECONDES</b><br><span style="font-size:12px; color:#94a3b8;">Le signal est calculé et évalué sur cet horizon précis — choisis la même expiration sur Pocket Option.</span>`;
+
+            log(`Signal détecté : ${actionText} à ${price.toFixed(decimals)}`, "success");
+            registerSignalForTracking(price, signal);
+
+            setTimeout(() => {
+                sigBox.className = 'signal-box';
+                state.signalActive = false;
+            }, 10000);
+        }
+
+        state.lastPrice = price;
+    }
+
+    // ---------- Marché fermé / indisponible : on l'affiche, on n'invente rien ----------
+    function showMarketUnavailable(reason) {
+        document.getElementById('dot').className = "dot closed";
+        document.getElementById('conn-text').innerText = "INDISPONIBLE";
+        document.getElementById('conn-text').style.color = "#9ca3af";
+        document.getElementById('source-text').innerText = "--";
+        document.getElementById('closed-banner').style.display = "block";
+        document.getElementById('live-price').className = "price stale";
+        document.getElementById('live-price').innerText = "--";
+        log(reason, "warn");
+    }
+
+    function hideMarketUnavailable() {
+        document.getElementById('closed-banner').style.display = "none";
+    }
+
+    // ---------- Crypto via Kraken WebSocket v2 (données réelles, sans clé requise) ----------
+    function startCryptoEngine(assetName) {
+        let symbol = formatCryptoSymbol(assetName);
+        if (!symbol) {
+            showMarketUnavailable(`Symbole crypto non reconnu pour "${assetName}".`);
+            return;
+        }
+        log(`Connexion WebSocket Kraken sur ${symbol}...`, "sys");
+
+        state.timeoutCheck = setTimeout(() => {
+            if (state.socket && state.socket.readyState !== 1) {
+                state.socket.close();
+                showMarketUnavailable(`Aucune réponse de Kraken pour ${symbol}. Vérifie le symbole (ex: BTCUSD, ETHUSD).`);
+            }
+        }, 6000);
+
+        try {
+            state.socket = new WebSocket(`wss://ws.kraken.com/v2`);
+
+            state.socket.onopen = () => {
+                clearTimeout(state.timeoutCheck);
+                state.socket.send(JSON.stringify({
+                    method: "subscribe",
+                    params: { channel: "ticker", symbol: [symbol] }
+                }));
+            };
+
+            state.socket.onmessage = (e) => {
+                let msg;
+                try { msg = JSON.parse(e.data); } catch (err) { return; }
+
+                // Confirmation d'abonnement
+                if (msg.method === "subscribe" && msg.success === false) {
+                    showMarketUnavailable(`Kraken a refusé l'abonnement pour ${symbol} : ${msg.error || "symbole inconnu"}.`);
+                    return;
+                }
+
+                // Messages de données : { channel: "ticker", type: "snapshot"|"update", data: [{ symbol, last, ... }] }
+                if (msg.channel === "ticker" && Array.isArray(msg.data) && msg.data.length > 0) {
+                    if (state.lastPrice === 0) {
+                        hideMarketUnavailable();
+                        document.getElementById('dot').className = "dot active";
+                        document.getElementById('conn-text').innerText = "EN DIRECT";
+                        document.getElementById('conn-text').style.color = "#10b981";
+                        document.getElementById('source-text').innerText = "Source : Kraken (temps réel)";
+                        log(`Connecté au flux réel Kraken.`, "success");
+                    }
+                    const tick = msg.data[0];
+                    const price = parseFloat(tick.last);
+                    if (!isNaN(price)) processTick(price);
+                }
+            };
+
+            state.socket.onerror = () => {
+                log("Erreur sur le flux Kraken.", "error");
+            };
+
+            state.socket.onclose = () => {
+                if (state.running) {
+                    showMarketUnavailable("Connexion Kraken fermée. Marché possiblement indisponible pour ce symbole.");
+                }
+            };
+
+        } catch (e) {
+            showMarketUnavailable("Impossible d'ouvrir la connexion WebSocket : " + e.message);
+        }
+    }
+
+    // ---------- Forex via Twelve Data (polling, données réelles) ----------
+    async function pollForexPrice(pair) {
+        try {
+            const url = `https://api.twelvedata.com/price?symbol=${encodeURIComponent(pair)}&apikey=${TWELVE_DATA_KEY}`;
+            const res = await fetch(url);
+            const data = await res.json();
+
+            if (data.status === "error" || data.code) {
+                showMarketUnavailable(`Twelve Data : ${data.message || "marché fermé ou symbole invalide"}.`);
+                return;
+            }
+
+            if (data.price) {
+                clearTimeout(state.timeoutCheck);
+                hideMarketUnavailable();
+                document.getElementById('dot').className = "dot active";
+                document.getElementById('conn-text').innerText = "EN DIRECT";
+                document.getElementById('conn-text').style.color = "#10b981";
+                document.getElementById('source-text').innerText = "Source : Twelve Data (réel)";
+                processTick(parseFloat(data.price));
+            }
+        } catch (e) {
+            showMarketUnavailable("Erreur réseau vers Twelve Data : " + e.message);
+        }
+    }
+
+    function startForexEngine(assetName) {
+        const pair = formatForexSymbol(assetName);
+        if (!pair) {
+            showMarketUnavailable(`Format non reconnu pour "${assetName}". Utilise un format à 6 lettres, ex: EURUSD.`);
+            return;
+        }
+
+        log(`Récupération du prix réel pour ${pair} via Twelve Data...`, "sys");
+
+        state.timeoutCheck = setTimeout(() => {
+            // Si après 8s on n'a toujours rien reçu (ping initial échoué)
+        }, 8000);
+
+        pollForexPrice(pair); // premier appel immédiat
+        state.pollInterval = setInterval(() => {
+            if (!state.running) return;
+            pollForexPrice(pair);
+        }, 8000); // respecte la limite gratuite de Twelve Data (8 req/min)
+    }
+
+    // ---------- Démarrage / arrêt ----------
+    function startEngine(assetName, type) {
+        if (type === "crypto") {
+            startCryptoEngine(assetName);
+        } else {
+            startForexEngine(assetName);
+        }
+    }
+
+    function stopEngine() {
+        state.running = false;
+        clearTimeout(state.timeoutCheck);
+        if (state.socket) { state.socket.close(); state.socket = null; }
+        if (state.pollInterval) { clearInterval(state.pollInterval); state.pollInterval = null; }
+        if (state.evaluatorInterval) { clearInterval(state.evaluatorInterval); state.evaluatorInterval = null; }
+
+        document.getElementById('main-btn').innerText = "LANCER";
+        document.getElementById('main-btn').className = "";
+        document.getElementById('dot').className = "dot";
+        document.getElementById('conn-text').innerText = "HORS LIGNE";
+        document.getElementById('conn-text').style.color = "#94a3b8";
+        document.getElementById('source-text').innerText = "--";
+        document.getElementById('closed-banner').style.display = "none";
+        document.getElementById('live-price').innerText = "--";
+        document.getElementById('live-price').className = "price";
+        log("Moteur arrêté manuellement.", "sys");
+    }
+
+    function toggleEngine() {
+        if (state.running) {
+            stopEngine();
+        } else {
+            let asset = document.getElementById('market-input').value.trim();
+            let type = document.getElementById('asset-type').value;
+            if (!asset) return;
+
+            state.running = true;
+            state.history = [];
+            state.signalActive = false;
+            state.assetType = type;
+            state.currentAsset = asset;
+            state.lastPrice = 0;
+            state.pendingSignals = [];
+            state.wins = 0;
+            state.losses = 0;
+            updateReliabilityDisplay();
+
+            document.getElementById('main-btn').innerText = "ARRÊTER";
+            document.getElementById('main-btn').className = "stop";
+            document.getElementById('signal-container').className = 'signal-box';
+
+            log(`Démarrage de l'analyse pour ${asset.toUpperCase()} (${type})`, "sys");
+            startEngine(asset, type);
+
+            // Horloge indépendante : évalue les signaux en attente même si aucun nouveau
+            // tick de prix n'arrive (ex: marché calme, pas de trade pendant un moment).
+            // Note : les navigateurs ralentissent fortement les setInterval quand l'onglet
+            // est en arrière-plan ou l'écran verrouillé — voir le listener visibilitychange
+            // ci-dessous qui rattrape ça au retour au premier plan.
+            state.evaluatorInterval = setInterval(() => {
+                if (state.running && state.lastPrice > 0) {
+                    evaluatePendingSignals(state.lastPrice);
+                }
+            }, 2000);
+        }
+    }
+
+    // Rattrape immédiatement toute évaluation en retard quand l'onglet/écran
+    // redevient actif, car setInterval peut être suspendu pendant ce temps.
+    document.addEventListener('visibilitychange', () => {
+        if (!document.hidden && state.running && state.lastPrice > 0) {
+            log("Retour au premier plan : vérification des signaux en attente.", "sys");
+            evaluatePendingSignals(state.lastPrice);
+        }
+    });
+</script>
+</body>
+</html>
